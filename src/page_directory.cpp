@@ -1,16 +1,6 @@
 #include "page_directory.h"
 
-PageDirectory::PageDirectory(const std::string &tableName, IStorage &storage, ILogger &logger = GlobalLogger::instance())
-    : storage_(storage),
-      filename_(tableName + "/pagedirectory.dat"),
-      pagefilename_(tableName + "/pages.dat"),
-      logger_(logger),
-      header_{0, 0, 0, 0}
-{
-    initializeFile();
-};
-
-void PageDirectory::initializeFile()
+void PageDirectory::initialize()
 {
     // check if file exists
     logger_.log("Checking if page directory file exists: " + filename_);
