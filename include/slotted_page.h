@@ -10,6 +10,8 @@
 
 struct SlotEntry
 {
+
+    uint32_t id; // id of the row
     uint16_t offset;
     uint16_t length;
 };
@@ -17,7 +19,9 @@ struct SlotEntry
 struct SlottedPageHeader
 {
     uint16_t numSlots;
-    uint16_t freeDataOffset;
+    // freeDataOffset points to the first byte of the last row in the data area
+    // for example if the last row starts at byte 100, freeDataOffset will be 100
+    uint16_t lastDataOffset;
 };
 
 struct Data
@@ -37,7 +41,8 @@ class SlottedPage
 public:
     SlottedPage(ILogger &logger = GlobalLogger::instance()) : logger_(logger) {};
 
-    std::vector<ReturnType> insert(std::vector<Data> serializedData, char *page, size_t pageSize, PageDirectoryEntry &entry);
+    std::vector<ReturnType> insert(std::vector<Data> serializedData, std::vector<char> &page, PageDirectoryEntry &entry);
+    bool verifyPage(std::vector<char> &buffer);
 
 private:
     ILogger &logger_;

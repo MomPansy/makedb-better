@@ -36,20 +36,21 @@ public:
 
                                                                                                                  };
 
-    void initialize();
-    uint16_t getAndIncrementNextPageId();
+    bool initialize();
+    uint32_t getAndIncrementNextPageId();
+    uint32_t getAndIncrementNextRowId();
     void persistPageDirectory();
     void updatePageDirectoryEntry(PageDirectoryEntry &entry);
     void addPageDirectoryEntry(PageDirectoryEntry &entry);
     PageDirectoryEntry *getPageDirectoryEntry(uint16_t pageId);
     PageDirectoryEntry *getPageDirectoryBySize(uint16_t size);
-    void loadPage(PageDirectoryEntry &entry, char *buffer);
+    std::vector<PageDirectoryEntry> &getAllEntries() { return entries_; }
 
 private:
+    IStorage &storage_;
     std::string filename_;
     std::string pagefilename_;
-    IStorage &storage_;
     ILogger &logger_;
-    std::vector<PageDirectoryEntry> entries_;
     PageDirectoryHeader header_;
+    std::vector<PageDirectoryEntry> entries_;
 };

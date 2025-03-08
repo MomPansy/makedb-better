@@ -13,6 +13,7 @@ public:
     void appendFile(const std::string &filename, const char *data, std::size_t size);
     bool fileExists(const std::string &filename) override;
     bool createFile(const std::string &filename) override;
+    size_t getSize(const std::string &filename) override;
 
 private:
     ILogger &logger_;

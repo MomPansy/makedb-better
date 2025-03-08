@@ -11,4 +11,5 @@ public:
     virtual void appendFile(const std::string &filename, const char *data, std::size_t size) = 0;
     virtual bool fileExists(const std::string &filename) = 0;
     virtual bool createFile(const std::string &filename) = 0;
+    virtual size_t getSize(const std::string &filename) = 0;
 };

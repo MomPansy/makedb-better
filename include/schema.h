@@ -1,5 +1,8 @@
+#pragma once
+
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #include "IStorage.h"
 #include "ILogger.h"
@@ -9,7 +12,8 @@ enum class DataType
 {
     INT,
     FLOAT,
-    TEXT
+    TEXT,
+    DATE
 };
 
 struct Column
@@ -33,8 +37,10 @@ public:
     // write schema to disk
     bool write(const std::vector<Column> &schema);
     std::vector<Column> read();
-    void initialize();
-
+    bool initialize();
+    bool exists();
+    const std::vector<Column> &getSchema() { return schema_; }
+    
 private:
     IStorage &storage_;
     std::string filepath_;

@@ -134,3 +134,36 @@ bool FileStorage::createFile(const std::string &filename)
     }
     return true;
 }
+
+size_t FileStorage::getSize(const std::string &filename)
+{
+    logger_.log("Checking file size for: " + filename);
+
+    // If the file doesn't exist, either return 0 or throw an error.
+    if (!fileExists(filename))
+    {
+        logger_.log("File does not exist: " + filename);
+        return 0; 
+        // or throw std::runtime_error("File not found: " + filename);
+    }
+
+    // Open file in binary mode, positioned at the end (ate).
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    if (!file)
+    {
+        throw std::runtime_error("Failed to open file for size check: " + filename);
+    }
+
+    // tellg() gives us the number of bytes from the beginning to current position (end).
+    std::streampos fileSize = file.tellg();
+    file.close();
+
+    if (fileSize < 0)
+    {
+        throw std::runtime_error("tellg() returned negative for file: " + filename);
+    }
+
+    // Log and return the size as a size_t.
+    logger_.log("File size is " + std::to_string(fileSize) + " bytes for: " + filename);
+    return static_cast<size_t>(fileSize);
+}

@@ -1,39 +1,56 @@
 #include "page_directory.h"
 
-void PageDirectory::initialize()
+bool PageDirectory::initialize()
 {
-    // check if file exists
-    logger_.log("Checking if page directory file exists: " + filename_);
-    if (storage_.fileExists(filename_))
+    try
     {
-        logger_.log("Page directory file exists: " + filename_);
-        logger_.log("Reading page directory file: " + filename_);
-        storage_.readFile(filename_, reinterpret_cast<char *>(&header_), sizeof(header_));
-    }
-    else
-    {
-        logger_.log("Page directory file does not exist: " + filename_);
-        logger_.log("Creating page directory file: " + filename_);
-        storage_.writeFile(filename_, reinterpret_cast<char *>(&header_), sizeof(header_));
-    }
 
-    logger_.log("Page directory header: num_pages=" + std::to_string(header_.num_pages) + ", next_page_id=" + std::to_string(header_.next_page_id) + ", num_rows=" + std::to_string(header_.num_rows) + ", next_row_id=" + std::to_string(header_.next_row_id));
-    // load the page directory entries into memory
-    for (size_t i = 0; i < header_.num_pages; i++)
+        // check if file exists
+        logger_.log("Checking if page directory file exists: " + filename_);
+        if (storage_.fileExists(filename_))
+        {
+            logger_.log("Page directory file exists: " + filename_);
+            logger_.log("Reading page directory file: " + filename_);
+            storage_.readFile(filename_, reinterpret_cast<char *>(&header_), sizeof(header_));
+        }
+        else
+        {
+            logger_.log("Page directory file does not exist: " + filename_);
+            logger_.log("Creating page directory file: " + filename_);
+            storage_.writeFile(filename_, reinterpret_cast<char *>(&header_), sizeof(header_));
+        }
+
+        logger_.log("Page directory header: num_pages=" + std::to_string(header_.num_pages) + ", next_page_id=" + std::to_string(header_.next_page_id) + ", num_rows=" + std::to_string(header_.num_rows) + ", next_row_id=" + std::to_string(header_.next_row_id));
+        // load the page directory entries into memory
+        for (size_t i = 0; i < header_.num_pages; i++)
+        {
+            PageDirectoryEntry entry;
+            // Calculate the offset for the i-th entry.
+            std::streampos offset = sizeof(header_) + i * sizeof(entry);
+            storage_.readFile(filename_, reinterpret_cast<char *>(&entry), sizeof(entry), offset);
+            entries_.push_back(entry);
+        }
+        return true;
+    }
+    catch (const std::exception &e)
     {
-        PageDirectoryEntry entry;
-        // Calculate the offset for the i-th entry.
-        std::streampos offset = sizeof(header_) + i * sizeof(entry);
-        storage_.readFile(filename_, reinterpret_cast<char *>(&entry), sizeof(entry), offset);
-        entries_.push_back(entry);
+        throw std::runtime_error("Failed to initialize page directory: " + std::string(e.what()));
+        return false;
     }
 }
 
-uint16_t PageDirectory::getAndIncrementNextPageId()
+uint32_t PageDirectory::getAndIncrementNextPageId()
 {
-    uint16_t nextPageId = header_.next_page_id;
+    uint32_t nextPageId = header_.next_page_id;
     header_.next_page_id++;
     return nextPageId;
+}
+
+uint32_t PageDirectory::getAndIncrementNextRowId()
+{
+    uint32_t nextRowId = header_.next_row_id;
+    header_.next_row_id++;
+    return nextRowId;
 }
 
 void PageDirectory::persistPageDirectory()
@@ -110,14 +127,4 @@ PageDirectoryEntry *PageDirectory::getPageDirectoryBySize(uint16_t size)
     }
     logger_.log("Page directory entry not found for size: " + std::to_string(size));
     return nullptr;
-}
-
-// move this to Page Manager
-void PageDirectory::loadPage(PageDirectoryEntry &entry, char *buffer)
-{
-    logger_.log("Loading page: page_id=" + std::to_string(entry.page_id) + ", available_space=" + std::to_string(entry.available_space));
-    // Calculate the offset for the i-th entry.
-    std::streampos offset = entry.page_id * PAGE_SIZE;
-    storage_.readFile(pagefilename_, buffer, PAGE_SIZE, offset);
-    logger_.log("Page loaded: page_id=" + std::to_string(entry.page_id) + ", available_space=" + std::to_string(entry.available_space));
 }
